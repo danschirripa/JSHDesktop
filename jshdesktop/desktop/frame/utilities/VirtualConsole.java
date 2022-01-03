@@ -1,9 +1,12 @@
 package jshdesktop.desktop.frame.utilities;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,7 +94,7 @@ public class VirtualConsole extends BasicFrame {
 		inputPanel.add(send, BorderLayout.EAST);
 
 		JScrollPane outPutScroller = new JScrollPane(outPut);
-		outPutScroller.setPreferredSize(new Dimension(300, 400));
+		outPutScroller.setPreferredSize(new Dimension(450, 400));
 
 		mainPanel.add(outPutScroller, BorderLayout.CENTER);
 		mainPanel.add(inputPanel, BorderLayout.SOUTH);
@@ -110,6 +113,16 @@ public class VirtualConsole extends BasicFrame {
 
 		registerKeyboardAction(sendActionListener, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
 				WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				Component c = e.getComponent();
+				int w = c.getSize().width - 50;
+				int h = c.getSize().height - 100;
+				outPutScroller.setPreferredSize(new Dimension(w, h));
+			}
+		});
 
 		add(mainPanel);
 		setSize(500, 500);

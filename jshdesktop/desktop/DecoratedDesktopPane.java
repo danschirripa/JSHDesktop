@@ -1,11 +1,12 @@
 package jshdesktop.desktop;
 
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
 
 import javax.swing.JDesktopPane;
-import javax.swing.JMenu;
 
+import jshdesktop.DesktopManager;
 import jshdesktop.desktop.menu.DesktopMenuBar;
 
 public class DecoratedDesktopPane extends JDesktopPane {
@@ -15,17 +16,17 @@ public class DecoratedDesktopPane extends JDesktopPane {
 	public DecoratedDesktopPane() {
 		super();
 		bar = new DesktopMenuBar(this);
+		DesktopManager.init(this);
 	}
 
 	public void setBackground(Image i) {
-		super.setBackground(java.awt.Color.WHITE);
 		this.background = i;
 	}
 
 	@Override
-	public void paint(Graphics g) {
-		g.drawImage(background, 0, 0, WIDTH, HEIGHT, this);
-		super.paint(g);
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		g.drawImage(background, 0, 0, getWidth(), getHeight(), null);
 	}
 
 	public DesktopMenuBar getMenuBar() {

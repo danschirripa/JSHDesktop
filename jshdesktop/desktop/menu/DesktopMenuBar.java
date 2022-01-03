@@ -2,12 +2,19 @@ package jshdesktop.desktop.menu;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Time;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
 import jshdesktop.desktop.DecoratedDesktopPane;
+import jshdesktop.desktop.frame.utilities.SettingsPanel;
 import jshdesktop.desktop.frame.utilities.TextEditor;
 import jshdesktop.desktop.frame.utilities.VirtualConsole;
 import terra.shell.modules.ModuleEvent;
@@ -41,9 +48,31 @@ public class DesktopMenuBar extends JMenuBar {
 			}
 		});
 
+		JMenuItem launchSettings = new JMenuItem("Settings");
+		launchSettings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SettingsPanel();
+			}
+		});
+
 		menu.add(endSession);
 		menu.add(launchTestFrame);
 		menu.add(launchVirtualConsole);
+		menu.add(launchSettings);
+
+		JMenuItem clock = new JMenuItem();
+		clock.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("E hh:mma")));
+
+		Timer t = new Timer();
+		TimerTask task = new TimerTask() {
+			public void run() {
+				clock.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("E hh:mma")));
+			}
+		};
+		t.scheduleAtFixedRate(task,
+				Time.valueOf(LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute() + 1)), (60 * 1000));
+
+		this.add(clock);
 		this.add(menu);
 	}
 }

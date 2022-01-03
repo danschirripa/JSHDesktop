@@ -21,6 +21,9 @@ public class SettingsPanel extends BasicFrame {
 		tabs.add(mouseSettings);
 		tabs.add(lookAndFeelSettings);
 		tabs.add(clusterManagementSettings);
+
+		setSize(700, 500);
+		finish();
 	}
 
 	private JPanel createMouseSettingsTab() {
@@ -31,7 +34,7 @@ public class SettingsPanel extends BasicFrame {
 
 	private JPanel createLookAndFeelSettingsTab() {
 		JPanel lookFeel = new JPanel();
-		JPanel backgroundImage = new JPanel();
+		JPanel backgroundImageSelection = new JPanel();
 
 		return lookFeel;
 	}
