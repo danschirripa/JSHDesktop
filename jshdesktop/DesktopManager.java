@@ -41,6 +41,10 @@ public class DesktopManager {
 			conf.setValue("theme", "default");
 		}
 
+		String themePath = (String) conf.getValue("theme");
+		if (themePath.equals("default"))
+			themePath = (Launch.getConfD().getParent().toString() + "/modules/jshdesktop/assets/icons");
+
 		String imgPath = (String) conf.getValue("backgroundImg");
 		if (imgPath.equals("default")) {
 			imgPath = Launch.getConfD().getParent().toString() + "/modules/jshdesktop/assets/WaterGap_Overlook.jpg";
@@ -62,6 +66,14 @@ public class DesktopManager {
 		conf.setValue("backgroundImg", imgPath);
 		desktop.setBackground(i);
 		return false;
+	}
+
+	public static int getScreenWidth() {
+		return desktop.getWidth();
+	}
+
+	public static int getScreenHeight() {
+		return desktop.getHeight();
 	}
 
 }
