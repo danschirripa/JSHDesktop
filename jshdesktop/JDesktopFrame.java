@@ -2,6 +2,7 @@ package jshdesktop;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.GraphicsEnvironment;
 
 import javax.swing.JDesktopPane;
@@ -28,6 +29,8 @@ public class JDesktopFrame extends JFrame {
 
 	@Override
 	public Component add(Component c) {
+		if (c.getCursor().getType() == Cursor.DEFAULT_CURSOR)
+			c.setCursor(desktopPane.getCursor());
 		return desktopPane.add(c);
 	}
 

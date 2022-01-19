@@ -34,6 +34,7 @@ public abstract class WidgetFrame extends BasicFrame {
 	public void finish() {
 		setVisible(true);
 		module.getDesktopFrame().add(this);
+		toBack();
 	}
 
 	private MouseMotionListener mml;

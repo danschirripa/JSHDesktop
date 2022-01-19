@@ -3,6 +3,8 @@ package jshdesktop.widgets.builtin;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.time.LocalDateTime;
@@ -10,12 +12,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.JMenuItem;
+
 import jshdesktop.DesktopManager;
+import jshdesktop.widgets.WidgetContextMenu;
 import jshdesktop.widgets.WidgetFrame;
 import terra.shell.launch.Launch;
 
 public class DigitalClockWidget extends WidgetFrame {
 	private static Font font;
+	private Timer t;
 	private DigitalClockWidget dcw;
 
 	@Override
@@ -35,13 +41,14 @@ public class DigitalClockWidget extends WidgetFrame {
 		finish();
 
 		this.dcw = this;
-		Timer t = new Timer();
+		t = new Timer();
 		TimerTask task = new TimerTask() {
 			public void run() {
 				dcw.repaint();
 			}
 		};
 		t.scheduleAtFixedRate(task, 1000, 1000);
+		new ContextMenu(this);
 	}
 
 	public void paintComponent(Graphics g) {
@@ -49,6 +56,36 @@ public class DigitalClockWidget extends WidgetFrame {
 		g.setColor(Color.black);
 		g.setFont(font);
 		g.drawString(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ssa")), 0, 75);
+	}
+
+	private class ContextMenu extends WidgetContextMenu {
+
+		public ContextMenu(WidgetFrame wf) {
+			super(wf);
+		}
+
+		@Override
+		protected void createMenu() {
+			JMenuItem close = new JMenuItem("Close");
+			JMenuItem showSettings = new JMenuItem("Settings");
+
+			close.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					t.cancel();
+					dcw.dispose();
+				}
+			});
+
+			showSettings.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+
+				}
+			});
+
+			add(close);
+			//add(showSettings);
+		}
+
 	}
 
 }

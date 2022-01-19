@@ -38,6 +38,7 @@ public class VirtualConsole extends BasicFrame {
 	private static Logger log = LogManager.getLogger("VirtualConsole");
 
 	public VirtualConsole() {
+		setTitle("vterm");
 		cmds = Launch.getCmds();
 		Thread th = new Thread(new Runnable() {
 			public void run() {

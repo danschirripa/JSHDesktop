@@ -2,6 +2,8 @@ package jshdesktop.widgets.builtin;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.time.LocalDateTime;
@@ -9,7 +11,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.imageio.ImageIO;
+import javax.swing.JMenuItem;
 
+import jshdesktop.widgets.WidgetContextMenu;
 import jshdesktop.widgets.WidgetFrame;
 import terra.shell.launch.Launch;
 
@@ -17,6 +21,7 @@ public class AnalogClockWidget extends WidgetFrame {
 	private BufferedImage clockFace;
 	private int deltaX, deltaY;
 	private AnalogClockWidget cw;
+	private Timer t;
 
 	@Override
 	public void create() {
@@ -34,13 +39,14 @@ public class AnalogClockWidget extends WidgetFrame {
 		finish();
 
 		cw = this;
-		Timer t = new Timer();
+		t = new Timer();
 		TimerTask task = new TimerTask() {
 			public void run() {
 				cw.repaint();
 			}
 		};
 		t.scheduleAtFixedRate(task, 1000, 1000);
+		new ContextMenu(this);
 	}
 
 	private int centerPointX;
@@ -86,6 +92,36 @@ public class AnalogClockWidget extends WidgetFrame {
 		int xSecond = (int) (centerPointX + sLength * Math.sin(time.getSecond() * (2 * Math.PI / 60)));
 		int ySecond = (int) (centerPointY - sLength * Math.cos(second * (2 * Math.PI / 60)));
 		g.drawLine(centerPointX, centerPointY, xSecond, ySecond);
+	}
+
+	private class ContextMenu extends WidgetContextMenu {
+
+		public ContextMenu(WidgetFrame wf) {
+			super(wf);
+		}
+
+		@Override
+		protected void createMenu() {
+			JMenuItem close = new JMenuItem("Close");
+			JMenuItem showSettings = new JMenuItem("Settings");
+
+			close.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					t.cancel();
+					cw.dispose();
+				}
+			});
+
+			showSettings.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+
+				}
+			});
+
+			add(close);
+			// add(showSettings);
+		}
+
 	}
 
 }

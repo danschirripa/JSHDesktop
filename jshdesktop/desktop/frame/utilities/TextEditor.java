@@ -42,13 +42,14 @@ public class TextEditor extends BasicFrame {
 
 	@Override
 	public void create() {
+		setTitle("Unititled File");
 		fontList = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
 
 		listener = new MenuListener();
 		JPanel editor = new JPanel();
 		area = new JTextArea();
 		area.setColumns(50);
-		area.setRows(70);
+		area.setRows(40);
 		area.setEditable(true);
 		JScrollPane editorScroller = new JScrollPane(area);
 		editor.add(editorScroller);
@@ -139,12 +140,31 @@ public class TextEditor extends BasicFrame {
 		return menu;
 	}
 
-	private void loadFile(File f) {
+	public boolean open(File f) {
+		try {
+			loadFile(f);
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+
+	public boolean open(String path) {
+		try {
+			loadFile(new File(path));
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+
+	private void loadFile(File f) throws IOException {
 		try {
 			PopupProgressBar prog = new PopupProgressBar();
 			module.getDesktopFrame().add(prog);
 			FileInputStream fin = new FileInputStream(f);
 			Scanner sc = new Scanner(fin);
+			area.setText("");
 			while (sc.hasNextLine()) {
 				area.append(sc.nextLine() + "\n");
 			}
@@ -152,6 +172,7 @@ public class TextEditor extends BasicFrame {
 			curFile = f;
 			module.getDesktopFrame().remove(prog);
 			prog.dispose();
+			setTitle(f.getName());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -173,6 +194,7 @@ public class TextEditor extends BasicFrame {
 			out.close();
 			module.getDesktopFrame().remove(prog);
 			prog.dispose();
+			setTitle(f.getName());
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -262,7 +284,13 @@ public class TextEditor extends BasicFrame {
 							parent.dispose();
 							return;
 						} else if (e.getActionCommand().equals(JFileChooser.APPROVE_SELECTION)) {
-							loadFile(fileChooser.getSelectedFile());
+							try {
+								loadFile(fileChooser.getSelectedFile());
+							} catch (Exception e1) {
+								e1.printStackTrace();
+								JOptionPane.showInternalMessageDialog(parent, e1.getMessage(), "Error",
+										JOptionPane.ERROR_MESSAGE);
+							}
 						}
 						parent.dispose();
 					}
@@ -272,6 +300,7 @@ public class TextEditor extends BasicFrame {
 				intFileChooser.setSize(200, 300);
 				intFileChooser.setVisible(true);
 				intFileChooser.setResizable(true);
+				intFileChooser.toFront();
 				module.getDesktopFrame().add(intFileChooser);
 				break;
 			case "pref":

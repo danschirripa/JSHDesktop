@@ -2,8 +2,12 @@ package jshdesktop;
 
 import javax.swing.SwingUtilities;
 
+import jshdesktop.commands.LaunchImageViewerCommand;
+import jshdesktop.commands.LaunchTextEditorCommand;
+import jshdesktop.commands.LaunchVirtualConsoleCommand;
 import jshdesktop.desktop.frame.DialogFrame;
 import jshdesktop.desktop.frame.DialogFrame.DialogType;
+import terra.shell.launch.Launch;
 import terra.shell.modules.ModuleEvent;
 import terra.shell.modules.ModuleEvent.DummyEvent;
 import terra.shell.utils.keys.Event;
@@ -44,6 +48,13 @@ public class module extends terra.shell.modules.Module {
 
 	@Override
 	public void onEnable() {
+		log.log("Registering JSHDesktop commands...");
+		LaunchTextEditorCommand textEdit = new LaunchTextEditorCommand();
+		Launch.registerCommand(textEdit.getName(), textEdit);
+		LaunchVirtualConsoleCommand vterm = new LaunchVirtualConsoleCommand();
+		Launch.registerCommand(vterm.getName(), vterm);
+		LaunchImageViewerCommand imageViewer = new LaunchImageViewerCommand();
+		Launch.registerCommand(imageViewer.getName(), imageViewer);
 	}
 
 	@Override
