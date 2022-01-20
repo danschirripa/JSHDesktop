@@ -32,6 +32,17 @@ public class ExtensionRegistry {
 		}
 	}
 
+	public static boolean registerExtension(String extension, Command exec) {
+		if (conf.getValue(extension) != null) {
+			return false;
+		}
+		conf.setValue(extension, exec.getName());
+		return true;
+	}
+
+	public static void unRegisterExtension(String extension) {
+	}
+
 	public static Command getExtensionExecutor(String extension) {
 		try {
 			return Launch.getCmds().get(conf.getValue(extension));
