@@ -41,6 +41,7 @@ public class ExtensionRegistry {
 	}
 
 	public static void unRegisterExtension(String extension) {
+		conf.removeKey(extension);
 	}
 
 	public static Command getExtensionExecutor(String extension) {

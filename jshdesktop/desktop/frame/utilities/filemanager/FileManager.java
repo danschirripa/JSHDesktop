@@ -22,12 +22,15 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import jshdesktop.desktop.frame.BasicFrame;
+import jshdesktop.desktop.frame.utilities.ImageViewer;
+import jshdesktop.desktop.frame.utilities.TextEditor;
 import terra.shell.command.Command;
 import terra.shell.launch.Launch;
 import terra.shell.logging.LogManager;
 import terra.shell.logging.Logger;
 
 public class FileManager extends BasicFrame {
+	private static final long serialVersionUID = 6084398124279326622L;
 	private JFileChooser mainChooser;
 	private File selectedFile;
 	private JPanel infoPane;
@@ -68,10 +71,17 @@ public class FileManager extends BasicFrame {
 	}
 
 	private class ChooserPopupMenu extends JPopupMenu {
+		private static final long serialVersionUID = -6547450279218432009L;
+
 		public ChooserPopupMenu() {
 			// Need basic file actions, open, new, delete, info, open with
 			JMenuItem open = new JMenuItem("Open");
 			JMenu openWith = new JMenu("Open With");
+
+			JMenuItem openWithCmd = new JMenuItem("Command");
+			JMenuItem openWithTextEditor = new JMenuItem("Text Edit");
+			JMenuItem openWithImageView = new JMenuItem("Image Viewer");
+
 			JMenuItem newFile = new JMenuItem("New");
 			JMenuItem delete = new JMenuItem("Delete");
 			JMenuItem info = new JMenuItem("Info");
@@ -85,20 +95,27 @@ public class FileManager extends BasicFrame {
 					Command c = ExtensionRegistry.getExtensionExecutor(fileExtension);
 					if (c == null) {
 						String cmd = JOptionPane.showInternalInputDialog(mainChooser,
-								"No Command registered for this extension, please enter a command:");
+								"No Command registered for this extension, please enter a command:", "Command Input",
+								JOptionPane.INFORMATION_MESSAGE);
 						c = Launch.getCmds().get(cmd);
 						if (c == null) {
-							JOptionPane.showInternalMessageDialog(mainChooser, "Command not found!");
+							JOptionPane.showInternalMessageDialog(mainChooser, "Command not found!", "Error",
+									JOptionPane.ERROR_MESSAGE);
 							return;
 						}
 						int alwaysUse = JOptionPane.showInternalConfirmDialog(mainChooser,
-								"Always use " + c.getName() + " for " + fileExtension + " files?", "Always Use",
+								"Always use " + c.getName() + " for " + fileExtension + " files?", "Always Use?",
 								JOptionPane.YES_NO_OPTION);
 						if (alwaysUse == JOptionPane.YES_OPTION) {
 							boolean didRegister = ExtensionRegistry.registerExtension(fileExtension, c);
 							if (!didRegister) {
-								JOptionPane.showInternalConfirmDialog(mainChooser,
-										"Extension already has a handler registered, replace?");
+								int replace = JOptionPane.showInternalConfirmDialog(mainChooser,
+										"Extension already has a handler registered, replace?", "Replace?",
+										JOptionPane.YES_NO_OPTION);
+								if (replace == JOptionPane.YES_OPTION) {
+									ExtensionRegistry.unRegisterExtension(fileExtension);
+									ExtensionRegistry.registerExtension(fileExtension, c);
+								}
 							}
 						}
 					}
@@ -108,34 +125,138 @@ public class FileManager extends BasicFrame {
 
 			});
 
+			openWithCmd.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String fileExtension = mainChooser.getSelectedFile().getName()
+							.substring(mainChooser.getSelectedFile().getName().indexOf("."));
+					Command c;
+					String cmd = JOptionPane.showInternalInputDialog(mainChooser,
+							"No Command registered for this extension, please enter a command:", "Command Input",
+							JOptionPane.INFORMATION_MESSAGE);
+					c = Launch.getCmds().get(cmd);
+					if (c == null) {
+						JOptionPane.showInternalMessageDialog(mainChooser, "Command not found!", "Error",
+								JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					int alwaysUse = JOptionPane.showInternalConfirmDialog(mainChooser,
+							"Always use " + c.getName() + " for " + fileExtension + " files?", "Always Use?",
+							JOptionPane.YES_NO_OPTION);
+					if (alwaysUse == JOptionPane.YES_OPTION) {
+						boolean didRegister = ExtensionRegistry.registerExtension(fileExtension, c);
+						if (!didRegister) {
+							int replace = JOptionPane.showInternalConfirmDialog(mainChooser,
+									"Extension already has a handler registered, replace?", "Replace?",
+									JOptionPane.YES_NO_OPTION);
+							if (replace == JOptionPane.YES_OPTION) {
+								ExtensionRegistry.unRegisterExtension(fileExtension);
+								ExtensionRegistry.registerExtension(fileExtension, c);
+							}
+						}
+
+					}
+					c.addArgs(new String[] { mainChooser.getSelectedFile().getAbsolutePath() }, null);
+					c.run();
+				}
+			});
+
+			openWithTextEditor.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					new TextEditor().open(selectedFile);
+				}
+			});
+
+			openWithImageView.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					try {
+						new ImageViewer(selectedFile);
+					} catch (Exception e1) {
+						JOptionPane.showInternalMessageDialog(mainChooser, "Failed to open with Image Viewer", "Error",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+
 			newFile.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					String fileName = JOptionPane.showInternalInputDialog(mainChooser, "FileName:");
 					File newFile = new File(mainChooser.getCurrentDirectory(), fileName);
-					if (!newFile.exists()) {
-						JOptionPane.showInternalMessageDialog(mainChooser, "File already exists");
+					if (newFile.exists()) {
+						JOptionPane.showInternalMessageDialog(mainChooser, "File already exists", "Error",
+								JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					try {
 						newFile.createNewFile();
-						mainChooser.setCurrentDirectory(mainChooser.getCurrentDirectory());
+						mainChooser.rescanCurrentDirectory();
+						mainChooser.setSelectedFile(newFile);
 					} catch (Exception e1) {
-						JOptionPane.showInternalMessageDialog(mainChooser, e1.getMessage());
+						JOptionPane.showInternalMessageDialog(mainChooser, e1.getMessage(), e1.getMessage(),
+								JOptionPane.ERROR_MESSAGE);
 					}
 				}
 			});
 
 			delete.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-
+					File file = mainChooser.getSelectedFile();
+					int isSure = JOptionPane.showInternalConfirmDialog(mainChooser, "Delete " + file.getName() + "?",
+							"Delete?", JOptionPane.OK_CANCEL_OPTION);
+					if (isSure == JOptionPane.YES_OPTION) {
+						boolean didDelete = file.delete();
+						mainChooser.rescanCurrentDirectory();
+						if (!didDelete)
+							JOptionPane.showInternalMessageDialog(mainChooser, "Unable to delete file", "Error",
+									JOptionPane.ERROR_MESSAGE);
+					}
 				}
 			});
 
 			info.addActionListener(new ActionListener() {
+
+				private File infoFile;
+
 				public void actionPerformed(ActionEvent e) {
+					infoFile = mainChooser.getSelectedFile();
+					new InfoPane();
+				}
+
+				final class InfoPane extends BasicFrame {
+
+					@Override
+					public void create() {
+						JPanel infoPanel = new JPanel();
+						infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+						File file = infoFile;
+						String fileName = file.getName();
+						String fileExtension = fileName.substring(fileName.indexOf("."));
+						String defaultExtensionHandler = ExtensionRegistry.getExtensionExecutor(fileExtension)
+								.getName();
+						SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss:SSaa L/dd/y");
+						format.setTimeZone(TimeZone.getTimeZone("EST"));
+						String modificationTime = format.format(new Date(selectedFile.lastModified()));
+
+						JLabel nameLabel = new JLabel(fileName);
+						JLabel extensionLabel = new JLabel(fileExtension);
+						JLabel defaultHandlerLabel = new JLabel(defaultExtensionHandler);
+						JLabel modifiedTimeLabel = new JLabel(modificationTime);
+
+						infoPanel.add(nameLabel);
+						infoPanel.add(extensionLabel);
+						infoPanel.add(defaultHandlerLabel);
+						infoPanel.add(modifiedTimeLabel);
+
+						add(infoPanel);
+						setSize(300, 300);
+						finish();
+					}
 
 				}
 			});
+
+			openWith.add(openWithCmd);
+			openWith.add(openWithTextEditor);
+			openWith.add(openWithImageView);
 
 			add(open);
 			add(openWith);
@@ -152,18 +273,35 @@ public class FileManager extends BasicFrame {
 			if (e.getActionCommand().equals(JFileChooser.APPROVE_SELECTION)) {
 				String fileName = mainChooser.getSelectedFile().getName();
 				String fileExtension = fileName.substring(fileName.indexOf("."));
-				Command exec = ExtensionRegistry.getExtensionExecutor(fileExtension);
-				if (exec == null) {
+				Command c = ExtensionRegistry.getExtensionExecutor(fileExtension);
+				if (c == null) {
 					String cmd = JOptionPane.showInternalInputDialog(mainChooser,
-							"No command registered for this extension, please enter a command:");
-					exec = Launch.getCmds().get(cmd);
-					if (exec == null) {
-						JOptionPane.showInternalMessageDialog(mainChooser, "Command not found!");
+							"No Command registered for this extension, please enter a command:", "Command Input",
+							JOptionPane.INFORMATION_MESSAGE);
+					c = Launch.getCmds().get(cmd);
+					if (c == null) {
+						JOptionPane.showInternalMessageDialog(mainChooser, "Command not found!", "Error",
+								JOptionPane.ERROR_MESSAGE);
 						return;
 					}
+					int alwaysUse = JOptionPane.showInternalConfirmDialog(mainChooser,
+							"Always use " + c.getName() + " for " + fileExtension + " files?", "Always Use?",
+							JOptionPane.YES_NO_OPTION);
+					if (alwaysUse == JOptionPane.YES_OPTION) {
+						boolean didRegister = ExtensionRegistry.registerExtension(fileExtension, c);
+						if (!didRegister) {
+							int replace = JOptionPane.showInternalConfirmDialog(mainChooser,
+									"Extension already has a handler registered, replace?", "Replace?",
+									JOptionPane.YES_NO_OPTION);
+							if (replace == JOptionPane.YES_OPTION) {
+								ExtensionRegistry.unRegisterExtension(fileExtension);
+								ExtensionRegistry.registerExtension(fileExtension, c);
+							}
+						}
+					}
 				}
-				exec.addArgs(new String[] { mainChooser.getSelectedFile().getAbsolutePath() }, null);
-				exec.run();
+				c.addArgs(new String[] { mainChooser.getSelectedFile().getAbsolutePath() }, null);
+				c.run();
 			}
 		}
 

@@ -74,6 +74,8 @@ public class VirtualConsole extends BasicFrame {
 		outMon.start();
 	}
 
+	private boolean isDone = false;
+
 	@Override
 	public void create() {
 		JPanel mainPanel = new JPanel();
@@ -104,9 +106,19 @@ public class VirtualConsole extends BasicFrame {
 				String commandFull = inPut.getText();
 				String[] commandPart = commandFull.split(" ");
 				String cmd = commandPart[0];
-				commandPart = Arrays.copyOfRange(commandPart, 1, commandPart.length);
+				final String[] commandArgs = Arrays.copyOfRange(commandPart, 1, commandPart.length);
 				inPut.setText("");
-				t.runCmd(cmd, commandPart);
+
+				// FIXME Fix blocking commands blocking the GUI entirely
+
+				if (cmds.get(cmd).isBlocking()) {
+					Thread th = new Thread(() -> {
+						t.runCmd(cmd, commandArgs);
+						isDone = true;
+					});
+					th.start();
+				}
+				t.runCmd(cmd, commandArgs);
 			}
 		};
 

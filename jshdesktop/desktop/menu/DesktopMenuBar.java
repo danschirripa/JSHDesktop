@@ -151,7 +151,10 @@ public class DesktopMenuBar extends JMenuBar {
 			}
 		};
 		t.scheduleAtFixedRate(task,
-				Time.valueOf(LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute() + 1)), (60 * 1000));
+				Time.valueOf(LocalTime.of(LocalTime.now().getHour(),
+						(LocalTime.now().getMinute() + 1 == 60 ? LocalTime.now().getMinute() + 1
+								: LocalTime.now().getMinute() + 2))),
+				(60 * 1000));
 
 		this.add(clock);
 		this.add(menu);
@@ -159,6 +162,10 @@ public class DesktopMenuBar extends JMenuBar {
 		if (((String) conf.getValue("enableCommandWidgets")).equals("true")) {
 			loadMenuWidgets();
 		}
+	}
+
+	public File getWidgetConfDir() {
+		return new File((String) conf.getValue("commandWidgetConfDir"));
 	}
 
 	private void loadMenuWidgets() {
