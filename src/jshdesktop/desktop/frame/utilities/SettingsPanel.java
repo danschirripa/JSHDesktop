@@ -7,8 +7,10 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -196,8 +198,11 @@ public class SettingsPanel extends BasicFrame {
 	private JPanel createNodeInfoPanel(NodeInfo ni) {
 		JPanel nodeInfoPanel = new JPanel();
 		nodeInfoPanel.setPreferredSize(new Dimension(550, 450));
-
 		nodeInfoPanel.setName(ni.getIp());
+
+		JPanel generalInfoPanel = new JPanel();
+		generalInfoPanel.setLayout(new BoxLayout(generalInfoPanel, BoxLayout.Y_AXIS));
+
 		JLabel nodeIp = new JLabel(ni.getIp());
 
 		Date date = new Date(ni.lastPinged());
@@ -206,6 +211,26 @@ public class SettingsPanel extends BasicFrame {
 
 		JLabel lastPinged = new JLabel(lastPing);
 		JLabel curPing = new JLabel(ni.ping() + " ms");
+
+		JButton pingButton = new JButton("Ping");
+		pingButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					curPing.setText(Launch.getConnectionMan().ping(ni.getIp()) + " ms");
+					lastPinged.setText(format.format(LocalDateTime.now()));
+					generalInfoPanel.revalidate();
+				} catch (Exception e1) {
+					JOptionPane.showInternalMessageDialog(nodeInfoPanel, "Ping failed: " + e1.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
+
+		generalInfoPanel.add(nodeIp);
+		generalInfoPanel.add(new JSeparator());
+		generalInfoPanel.add(lastPinged);
+		generalInfoPanel.add(curPing);
+		generalInfoPanel.add(pingButton);
 
 		return nodeInfoPanel;
 	}
