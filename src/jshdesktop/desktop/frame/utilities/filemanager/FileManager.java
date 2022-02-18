@@ -7,7 +7,9 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.RandomAccessFile;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -261,28 +263,45 @@ public class FileManager extends BasicFrame {
 
 			copy.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					Clipboard.setClipboard(mainChooser.getSelectedFile());
+					Clipboard.setClip(mainChooser.getSelectedFile(), "COPY");
 				}
 			});
 
 			cut.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-
+					try {
+						Clipboard.setClip(mainChooser.getSelectedFile(), "CUT");
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
 				}
 			});
 
 			paste.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						File file = (File) Clipboard.getClipboard();
+						File file = (File) Clipboard.getClip();
 						String name = file.getName();
 						File dir;
-						if (mainChooser.getSelectedFile().isDirectory()) {
+						if ((mainChooser.getSelectedFile() != null) && mainChooser.getSelectedFile().isDirectory()) {
 							dir = mainChooser.getSelectedFile();
 						} else
 							dir = mainChooser.getCurrentDirectory();
-					} catch (Exception e1) {
 
+						FileInputStream fin = new FileInputStream(file);
+						FileChannel fInChannel = fin.getChannel();
+						FileOutputStream fout = new FileOutputStream(new File(dir, name));
+						fout.getChannel().transferFrom(fInChannel, 0, fInChannel.size());
+						fout.flush();
+						fout.close();
+						fInChannel.close();
+						fin.close();
+						if (Clipboard.getClipType().equals("CUT")) {
+							file.delete();
+						}
+						mainChooser.rescanCurrentDirectory();
+					} catch (Exception e1) {
+						e1.printStackTrace();
 					}
 				}
 			});
@@ -293,6 +312,9 @@ public class FileManager extends BasicFrame {
 
 			add(open);
 			add(openWith);
+			add(cut);
+			add(copy);
+			add(paste);
 			add(newFile);
 			add(delete);
 			add(info);
