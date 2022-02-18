@@ -85,6 +85,8 @@ public class FileManager extends BasicFrame {
 			JMenuItem newFile = new JMenuItem("New");
 			JMenuItem delete = new JMenuItem("Delete");
 			JMenuItem info = new JMenuItem("Info");
+			JMenuItem copy = new JMenuItem("Copy");
+			JMenuItem cut = new JMenuItem("Cut");
 
 			open.addActionListener(new ActionListener() {
 
