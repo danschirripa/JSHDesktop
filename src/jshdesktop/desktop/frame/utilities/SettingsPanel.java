@@ -1,9 +1,13 @@
 package jshdesktop.desktop.frame.utilities;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -12,6 +16,8 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -19,11 +25,13 @@ import javax.swing.filechooser.FileFilter;
 
 import jshdesktop.DesktopManager;
 import jshdesktop.desktop.frame.BasicFrame;
-import jshdesktop.desktop.frame.utilities.filemanager.FileManager;
 import jshdesktop.desktop.frame.utilities.filemanager.ThumbnailFileView;
+import terra.shell.emulation.concurrency.math.cluster.ConnectionManager;
+import terra.shell.emulation.concurrency.math.cluster.ConnectionManager.NodeInfo;
 import terra.shell.launch.Launch;
 
 public class SettingsPanel extends BasicFrame {
+	private int preferredWidth = 700, preferredHeight = 500;
 
 	@Override
 	public void create() {
@@ -135,9 +143,71 @@ public class SettingsPanel extends BasicFrame {
 		return lookFeelSettingsTab;
 	}
 
+	private JPanel nodeInfoPanel;
+
 	private JPanel createClusterManagementSettingsTab() {
 		JPanel clusterMan = new JPanel();
+		// Cluster Management features:
+		// Node count, CPU count
+		// Live Local Process count
+		// Overall usage report
+		// - Overall CPU
+		// - Overall Mem
+		ConnectionManager conMan = Launch.getConnectionMan();
+		int numNodes = conMan.numberOfNodes();
+		NodeInfo[] nodes = conMan.nodes();
+
+		if (nodes.length > 0)
+			nodeInfoPanel = createNodeInfoPanel(nodes[0]);
+		else {
+			nodeInfoPanel = new JPanel();
+			nodeInfoPanel.setPreferredSize(new Dimension(550, 450));
+			nodeInfoPanel.add(new JLabel("There currently no associated Nodes"), BorderLayout.CENTER);
+		}
+
+		JPanel nodelistPanel = new JPanel();
+		nodelistPanel.setPreferredSize(new Dimension(100, 450));
+
+		JList<NodeInfo> nodeList = new JList<NodeInfo>(nodes);
+		nodeList.addListSelectionListener(new ListSelectionListener() {
+
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				nodeInfoPanel = createNodeInfoPanel(nodes[nodeList.getSelectedIndex()]);
+				nodeInfoPanel.revalidate();
+				clusterMan.revalidate();
+			}
+
+		});
+
+		JScrollPane nodeListScroller = new JScrollPane(nodeList);
+		nodeListScroller.setPreferredSize(new Dimension(100, 400));
+
+		nodelistPanel.add(nodeListScroller, BorderLayout.CENTER);
+		JLabel nodeCount = new JLabel(numNodes + " nodes");
+		nodelistPanel.add(nodeCount, BorderLayout.NORTH);
+
+		clusterMan.add(nodelistPanel, BorderLayout.WEST);
+		clusterMan.add(new JSeparator(JSeparator.VERTICAL), BorderLayout.CENTER);
+		clusterMan.add(nodeInfoPanel, BorderLayout.EAST);
 		return clusterMan;
+	}
+
+	private JPanel createNodeInfoPanel(NodeInfo ni) {
+		JPanel nodeInfoPanel = new JPanel();
+		nodeInfoPanel.setPreferredSize(new Dimension(550, 450));
+
+		nodeInfoPanel.setName(ni.getIp());
+		JLabel nodeIp = new JLabel(ni.getIp());
+
+		Date date = new Date(ni.lastPinged());
+		DateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SS aa");
+		String lastPing = format.format(date);
+
+		JLabel lastPinged = new JLabel(lastPing);
+		JLabel curPing = new JLabel(ni.ping() + " ms");
+
+		return nodeInfoPanel;
 	}
 
 }
