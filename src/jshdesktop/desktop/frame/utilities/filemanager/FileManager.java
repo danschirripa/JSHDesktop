@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -21,6 +22,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import jshdesktop.Clipboard;
 import jshdesktop.desktop.frame.BasicFrame;
 import jshdesktop.desktop.frame.utilities.ImageViewer;
 import jshdesktop.desktop.frame.utilities.TextEditor;
@@ -87,6 +89,7 @@ public class FileManager extends BasicFrame {
 			JMenuItem info = new JMenuItem("Info");
 			JMenuItem copy = new JMenuItem("Copy");
 			JMenuItem cut = new JMenuItem("Cut");
+			JMenuItem paste = new JMenuItem("Paste");
 
 			open.addActionListener(new ActionListener() {
 
@@ -253,6 +256,34 @@ public class FileManager extends BasicFrame {
 						finish();
 					}
 
+				}
+			});
+
+			copy.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					Clipboard.setClipboard(mainChooser.getSelectedFile());
+				}
+			});
+
+			cut.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+
+				}
+			});
+
+			paste.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					try {
+						File file = (File) Clipboard.getClipboard();
+						String name = file.getName();
+						File dir;
+						if (mainChooser.getSelectedFile().isDirectory()) {
+							dir = mainChooser.getSelectedFile();
+						} else
+							dir = mainChooser.getCurrentDirectory();
+					} catch (Exception e1) {
+
+					}
 				}
 			});
 
