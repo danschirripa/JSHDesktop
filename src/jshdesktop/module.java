@@ -2,6 +2,7 @@ package jshdesktop;
 
 import javax.swing.SwingUtilities;
 
+import jshdesktop.commands.LaunchButtonPreviewCommand;
 import jshdesktop.commands.LaunchImageViewerCommand;
 import jshdesktop.commands.LaunchTextEditorCommand;
 import jshdesktop.commands.LaunchUpdaterCommand;
@@ -61,6 +62,8 @@ public class module extends terra.shell.modules.Module {
 		Launch.registerCommand(imageViewer.getName(), imageViewer);
 		LaunchUpdaterCommand updater = new LaunchUpdaterCommand();
 		Launch.registerCommand(updater.getName(), updater, null);
+		LaunchButtonPreviewCommand buttonPreview = new LaunchButtonPreviewCommand();
+		Launch.registerCommand("buttonPreview", buttonPreview);
 	}
 
 	@Override

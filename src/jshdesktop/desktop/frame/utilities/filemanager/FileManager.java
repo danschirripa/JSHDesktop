@@ -1,9 +1,20 @@
 package jshdesktop.desktop.frame.utilities.filemanager;
 
+import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.geom.GeneralPath;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -23,8 +34,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.UIManager;
 
 import jshdesktop.Clipboard;
+import jshdesktop.com.pump.plaf.BreadCrumbUI;
+import jshdesktop.com.pump.swing.JBreadCrumb;
+import jshdesktop.com.pump.swing.JBreadCrumb.BreadCrumbFormatter;
 import jshdesktop.desktop.frame.BasicFrame;
 import jshdesktop.desktop.frame.utilities.ImageViewer;
 import jshdesktop.desktop.frame.utilities.TextEditor;
@@ -32,12 +47,15 @@ import terra.shell.command.Command;
 import terra.shell.launch.Launch;
 import terra.shell.logging.LogManager;
 import terra.shell.logging.Logger;
+import terra.shell.utils.system.GeneralVariable;
+import terra.shell.utils.system.Variables;
 
 public class FileManager extends BasicFrame {
 	private static final long serialVersionUID = 6084398124279326622L;
 	private JFileChooser mainChooser;
 	private File selectedFile;
 	private JPanel infoPane;
+	private JBreadCrumb<String> breadCrumb;
 	private boolean showThumbs = false;
 	private ThumbnailFileView fileView;
 	private Logger log;
@@ -65,14 +83,127 @@ public class FileManager extends BasicFrame {
 		infoPane = new JPanel();
 		infoPane.setPreferredSize(new Dimension(200, 500));
 
+		breadCrumb = new JBreadCrumb<String>() {
+			private static final long serialVersionUID = -432694358798718146L;
+
+			public void paintComponent(Graphics g) {
+				g.setColor(getBackground());
+				g.fillRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+		};
+		Color highLightColor = Color.blue.darker();
+		GeneralVariable defColorVar = (GeneralVariable) Variables.getVar("defaultHighlightColor");
+		if (defColorVar != null) {
+			int r, g, b, a;
+			String[] rgba = defColorVar.getVarValue().split(",");
+			r = Integer.parseInt(rgba[0]);
+			g = Integer.parseInt(rgba[1]);
+			b = Integer.parseInt(rgba[2]);
+			a = Integer.parseInt(rgba[3]);
+			highLightColor = new Color(r, g, b);
+		}
+		breadCrumb.setBackground(highLightColor);
+		breadCrumb.setFormatter(new BreadCrumbFormatter<String>() {
+
+			@Override
+			public void format(JBreadCrumb<String> container, JLabel label, String pathNode, int index) {
+
+				label.setIcon(UIManager.getIcon("FileView.directoryIcon"));
+				label.setForeground(Color.DARK_GRAY);
+				label.setText(pathNode);
+				container.addMouseListener(new MouseListener() {
+
+					@Override
+					public void mouseClicked(MouseEvent e) {
+						String[] paths = container.getPath();
+						String path = "";
+						for (int i = 0; i < paths.length; i++) {
+							path += "/" + paths[i];
+						}
+						mainChooser.setCurrentDirectory(new File(path));
+					}
+
+					@Override
+					public void mousePressed(MouseEvent e) {
+					}
+
+					@Override
+					public void mouseReleased(MouseEvent e) {
+					}
+
+					@Override
+					public void mouseEntered(MouseEvent e) {
+					}
+
+					@Override
+					public void mouseExited(MouseEvent e) {
+					}
+
+				});
+			}
+
+		});
+		breadCrumb.putClientProperty(BreadCrumbUI.PROPERTY_SEPARATOR_ICON, new RoundedShadowIcon());
+		breadCrumb.setPath(mainChooser.getCurrentDirectory().getPath().split("/"));
+		mainPanel.add(breadCrumb, BorderLayout.NORTH);
 		mainPanel.add(mainChooser, BorderLayout.CENTER);
 		mainPanel.add(infoPane, BorderLayout.EAST);
 
 		add(mainPanel);
+		setFrameIcon(UIManager.getIcon("FileView.directoryIcon"));
 		setTitle("File Browser");
 		setSize(700, 500);
 		finish();
 	}
+
+	private class RoundedShadowIcon implements Icon {
+
+		BufferedImage scratch;
+
+		public RoundedShadowIcon() {
+			int separatorWidth = 5;
+			int leftPadding = 6;
+			int rightPadding = 10;
+
+			scratch = new BufferedImage(separatorWidth + leftPadding + rightPadding, 26, BufferedImage.TYPE_INT_ARGB);
+			Color darkShadow = new Color(0, 0, 0, 50);
+			Color lightShadow = new Color(0, 0, 0, 0);
+			Graphics2D g2 = scratch.createGraphics();
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setComposite(AlphaComposite.Clear);
+			g2.fillRect(0, 0, scratch.getWidth(), scratch.getHeight());
+			g2.setComposite(AlphaComposite.SrcOver);
+			g2.setPaint(new GradientPaint(0, 0, darkShadow, scratch.getWidth() - 3, 0, lightShadow));
+			g2.fillRect(0, 0, scratch.getWidth(), scratch.getHeight());
+
+			g2.setComposite(AlphaComposite.Clear);
+			GeneralPath chunk = new GeneralPath();
+			chunk.moveTo(leftPadding, 0);
+			int k = 5;
+			chunk.curveTo(leftPadding + k, k, leftPadding + k, getIconHeight() - k, leftPadding, getIconHeight());
+			chunk.lineTo(0, getIconHeight());
+			chunk.lineTo(0, 0);
+			g2.fill(chunk);
+			g2.dispose();
+		}
+
+		@Override
+		public void paintIcon(Component c, Graphics g, int x, int y) {
+			g.drawImage(scratch, x, y, null);
+		}
+
+		@Override
+		public int getIconWidth() {
+			return scratch.getWidth();
+		}
+
+		@Override
+		public int getIconHeight() {
+			return scratch.getHeight();
+		}
+
+	};
 
 	private class ChooserPopupMenu extends JPopupMenu {
 		private static final long serialVersionUID = -6547450279218432009L;
@@ -366,6 +497,8 @@ public class FileManager extends BasicFrame {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
+			if (breadCrumb != null)
+				breadCrumb.setPath(mainChooser.getCurrentDirectory().getPath().split("/"));
 			if (mainChooser.getSelectedFile() != null) {
 				updateInfoPane();
 				infoPane.revalidate();

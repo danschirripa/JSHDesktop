@@ -13,12 +13,14 @@ import javax.swing.BorderFactory;
 import javax.swing.JDesktopPane;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
 import jshdesktop.DesktopManager;
 import jshdesktop.desktop.menu.DesktopMenuBar;
+import jshdesktop.widgets.WidgetFrame;
 
 public class DecoratedDesktopPane extends JDesktopPane {
 	private Image background;
@@ -63,9 +65,10 @@ public class DecoratedDesktopPane extends JDesktopPane {
 	@Override
 	public Component add(Component c) {
 		super.add(c);
-		if (c instanceof JInternalFrame) {
+		if (c instanceof JInternalFrame && !(c instanceof WidgetFrame)) {
 			JInternalFrame tmp = (JInternalFrame) c;
 			JMenuItem menuItem = new JMenuItem(tmp.getTitle());
+			menuItem.setIcon(tmp.getFrameIcon());
 			menuItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (tmp.isIcon()) {
@@ -82,13 +85,23 @@ public class DecoratedDesktopPane extends JDesktopPane {
 					}
 				}
 			});
+			JPopupMenu menuItemPopup = new JPopupMenu();
+			JMenuItem closeFrame = new JMenuItem("Close");
+			JMenuItem minimizeFrame = new JMenuItem("Minimize");
+			JMenuItem bringToFront = new JMenuItem("Focus");
+			JMenuItem maximizeFrame = new JMenuItem("Maximize");
+
+			menuItemPopup.add(closeFrame);
+			menuItemPopup.add(minimizeFrame);
+			menuItemPopup.add(bringToFront);
+			menuItemPopup.add(maximizeFrame);
+
+			menuItem.setComponentPopupMenu(menuItemPopup);
 			menuItem.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 			menuItem.addMouseListener(new MouseListener() {
 
 				@Override
 				public void mouseClicked(MouseEvent e) {
-					// TODO Auto-generated method stub
-
 				}
 
 				@Override

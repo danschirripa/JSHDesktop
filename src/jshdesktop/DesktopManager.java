@@ -26,6 +26,8 @@ import terra.shell.config.Configuration;
 import terra.shell.launch.Launch;
 import terra.shell.logging.LogManager;
 import terra.shell.logging.Logger;
+import terra.shell.utils.system.GeneralVariable;
+import terra.shell.utils.system.Variables;
 
 public class DesktopManager {
 	private static boolean init = false;
@@ -53,6 +55,7 @@ public class DesktopManager {
 			conf.setValue("backgroundImg", "default");
 			conf.setValue("theme", "darcula");
 			conf.setValue("cursor", "default");
+			conf.setValue("highlightColor", "108,137,184,0");
 		}
 		try {
 			IconManager.init();
@@ -74,6 +77,15 @@ public class DesktopManager {
 			UIManager.setLookAndFeel(laf);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+
+		try {
+			String highlightColor = (String) conf.getValue("highlightColor");
+			Variables.setVar(new GeneralVariable("defaultHighlightColor", highlightColor));
+		} catch (Exception e) {
+			if (!(e instanceof NullPointerException)) {
+				e.printStackTrace();
+			}
 		}
 
 		String cursorImgPath = (String) conf.getValue("cursor");
